@@ -1,0 +1,222 @@
+<html>
+
+<head>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/deck.gl@latest/dist.min.js"></script>
+    <!-- only if base map is needed -->
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v1.6.1/mapbox-gl.js"></script>
+    <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.1/mapbox-gl.css" rel="stylesheet" />
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        #control-panel {
+            font-family: Helvetica, Arial, sans-serif;
+            position: absolute;
+            background: #fff;
+            top: 0;
+            left: 0;
+            margin: 12px;
+            padding: 20px;
+            z-index: 1;
+            display: none;
+        }
+        
+        #control-data {
+            position: absolute;
+            top: 0;
+            right: 0;
+            margin: 10px;
+            z-index: 1;
+            margin-right: 20px;
+        }
+        
+        [type="radio"]:checked,
+        [type="radio"]:not(:checked) {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        [type="radio"]:checked+label,
+        [type="radio"]:not(:checked)+label {
+            position: relative;
+            padding-left: 28px;
+            cursor: pointer;
+            line-height: 20px;
+            display: inline-block;
+            color: #666;
+        }
+        
+        [type="radio"]:checked+label:before,
+        [type="radio"]:not(:checked)+label:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border: 1px solid #ddd;
+            border-radius: 100%;
+            background: #fff;
+        }
+        
+        [type="radio"]:checked+label:after,
+        [type="radio"]:not(:checked)+label:after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background: #F87DA9;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            border-radius: 100%;
+            -webkit-transition: all 0.2s ease;
+            transition: all 0.2s ease;
+        }
+        
+        [type="radio"]:not(:checked)+label:after {
+            opacity: 0;
+            -webkit-transform: scale(0);
+            transform: scale(0);
+        }
+        
+        [type="radio"]:checked+label:after {
+            opacity: 1;
+            -webkit-transform: scale(1);
+            transform: scale(1);
+        }
+        
+        label {
+            font-weight: 700;
+            font-size: .833em;
+            letter-spacing: 0px;
+            font-family: UberMove, Helvetica Neue, Helvetica, sans-serif;
+            color: #ccc !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="control-data">
+        <form name="dataTypeForm">
+            <p>
+                <input type="radio" id="data-type-1" name="dataTypeRadio" checked>
+                <label for="data-type-1">Pre-Sanctions</label>
+            </p>
+            <p>
+                <input type="radio" id="data-type-2" name="dataTypeRadio">
+                <label for="data-type-2">Post Sanctions</label>
+            </p>
+        </form>
+
+    </div>
+    <div id="control-panel">
+        <div>
+            <label>Radius</label>
+            <input id="radius" type="range" min="1000" max="20000" step="1000" value="10000"></input>
+            <span id="radius-value"></span>
+        </div>
+        <div>
+            <label>Coverage</label>
+            <input id="coverage" type="range" min="0" max="1" step="0.1" value="1"></input>
+            <span id="coverage-value"></span>
+        </div>
+        <div>
+            <label>Upper Percentile</label>
+            <input id="upperPercentile" type="range" min="90" max="100" step="1" value="100"></input>
+            <span id="upperPercentile-value"></span>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+    const DataType = {
+        pre: "Pre-Sanctions",
+        post: "Post Sanctions"
+    }
+    var datatype = DataType.pre;
+
+
+    const deckgl = new deck.DeckGL({
+        mapboxApiAccessToken: "pk.eyJ1IjoiYmVsb3BvdCIsImEiOiJjazZzMjB4ZjQwYzhwM2xzNTVkcHBudTY4In0.FbuCqIEfhgMN3d02eZQ4hQ",
+        mapStyle: 'mapbox://styles/mapbox/dark-v9',
+        initialViewState: {
+            longitude: -66.589729,
+            latitude: 9.423750,
+            zoom: 6,
+            minZoom: 5,
+            maxZoom: 15,
+            pitch: 40.5
+        },
+        controller: true
+    });
+
+    const data = d3.csv('https://raw.githubusercontent.com/belopot/dataviz-venezuelaoilport/master/data.csv');
+
+    const OPTIONS = ['radius', 'coverage', 'upperPercentile'];
+
+    const COLOR_RANGE = [
+        [1, 152, 189],
+        [73, 227, 206],
+        [216, 254, 181],
+        [254, 237, 177],
+        [254, 173, 84],
+        [209, 55, 78]
+    ];
+
+    OPTIONS.forEach(key => {
+        document.getElementById(key).oninput = renderLayer;
+    });
+
+
+
+    function renderLayer() {
+        const options = {};
+        OPTIONS.forEach(key => {
+            const value = +document.getElementById(key).value;
+            document.getElementById(key + '-value').innerHTML = value;
+            options[key] = value;
+        });
+
+        console.log(data, datatype)
+        const hexagonLayer = new deck.HexagonLayer({
+            id: 'heatmap',
+            colorRange: COLOR_RANGE,
+            data,
+            elevationRange: [0, 300000],
+            // getElevation: d => Number(d[datatype]),
+            elevationScale: 1,
+            extruded: true,
+            getPosition: d => [Number(d.Long), Number(d.Lat)],
+            opacity: 1,
+            ...options
+        });
+
+        deckgl.setProps({
+            layers: [hexagonLayer]
+        });
+    }
+
+
+    var rad = document.dataTypeForm.dataTypeRadio;
+    for (var i = 0; i < rad.length; i++) {
+        rad[i].addEventListener('change', function() {
+
+            if (this.id === "data-type-1") {
+                // Pre-Sanctions
+                datatype = DataType.pre;
+                renderLayer();
+            } else if (this.id === "data-type-2") {
+                // Post Sanctions
+                datatype = DataType.post;
+                renderLayer();
+            }
+
+        });
+    }
+    renderLayer();
+</script>
+
+</html>
