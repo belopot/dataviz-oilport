@@ -234,19 +234,26 @@
         "https://raw.githubusercontent.com/belopot/dataviz-venezuelaoilport/master/data.csv"
     ).then(function(d) {
         for (var i = 0; i < d.length; i++) {
-            preData.push({
-                site: d[i].site,
-                lat: d[i].lat,
-                lon: d[i].lon,
-                value: d[i].pre_sanctions,
-            });
 
-            postData.push({
-                site: d[i].site,
-                lat: d[i].lat,
-                lon: d[i].lon,
-                value: d[i].post_sanctions,
-            });
+            if (d[i].pre_sanctions !== "") {
+                preData.push({
+                    site: d[i].site,
+                    lat: d[i].lat,
+                    lon: d[i].lon,
+                    value: d[i].pre_sanctions,
+                });
+            }
+
+            if (d[i].post_sanctions !== "") {
+                postData.push({
+                    site: d[i].site,
+                    lat: d[i].lat,
+                    lon: d[i].lon,
+                    value: d[i].post_sanctions,
+                });
+            }
+
+
         }
 
         data = preData;
