@@ -2,4 +2,4 @@
  Data visualization - Venezuela Oil Port
 
 ### Live demo
-https://belopot.github.io/dataviz-venezuelaoilport/
+https://belopot.github.io/dataviz-oilport/
