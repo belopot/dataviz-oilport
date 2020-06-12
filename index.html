@@ -123,11 +123,11 @@
     <div id="control-data">
         <p>
             <input type="radio" id="data-type-1" name="dataTypeRadio" checked />
-            <label for="data-type-1">Pre-Sanctions</label>
+            <label for="data-type-1">Before U.S. Sanctions</label>
         </p>
         <p>
             <input type="radio" id="data-type-2" name="dataTypeRadio" />
-            <label for="data-type-2">Post Sanctions</label>
+            <label for="data-type-2">After U.S. Sanctions</label>
         </p>
     </div>
 </body>
@@ -172,7 +172,7 @@
             tooltip.style.top = `${y}px`;
             tooltip.style.left = `${x}px`;
             tooltip.innerHTML = `<div><span class="key key-route">Site:</span><span class="value">${object.site}</span></div>`;
-            tooltip.innerHTML += `<div><span class="key key-route">Sanctions:</span><span class="value">${numberWithCommas(
+            tooltip.innerHTML += `<div><span class="key key-route">Number of post calls:</span><span class="value">${numberWithCommas(
           object.value
         )}</span></div>`;
             tooltip.style.opacity = 1;
@@ -199,7 +199,7 @@
                 150,
             ],
             getLineColor: [0, 0, 0],
-            getElevation: (d) => 100 + Number(d.value),
+            getElevation: (d) => Number(d.value),
             autoHighlight: true,
             highlightColor: [32, 129, 212, 255],
             onHover: (info, event) => {
